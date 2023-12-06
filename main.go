@@ -26,17 +26,9 @@ func indexInIt() IIndex {
 
 func main() {
 	idx := indexInIt()
-	idx.Open() // remvoe after
+	idx.Open() // remove after
 	dservers(&idx)
 	//dcrawl("https://openai.com/robots.txt", &idx)
-	//dcrawl("https://openai.com/customer-stories/duolingo", &idx) // remove after
-	/*if list, found := idx.imgSearch("duolingo"); found { // remove after
-		for _, val := range list {
-			fmt.Printf("url: %v, src: %v, altTxt: %v\n", val.url, val.src, val.altTxt)
-		}
-	} else {
-		fmt.Println("Not found")
-	}*/
 	
 	for {
 		time.Sleep(100 * time.Millisecond)

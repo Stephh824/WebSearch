@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"sort"
@@ -10,9 +8,7 @@ import (
 	"text/template"
 )
 
-type Book struct {
-	Title, Author string
-}
+func wordQuery(wcSearch bool) (word_id2, wordIds) 
 
 func dlookup(word string, idx *IIndex, wcSearch bool) (list TfList, found bool) {
 	var word_id int
@@ -80,7 +76,6 @@ func dlookup(word string, idx *IIndex, wcSearch bool) (list TfList, found bool) 
 			if err != nil {
 				return list, false
 			}
-			log.Printf("Term_id1: %v term_id2: %v\n", term_id, word_id2)
 			rows, err = idx.dbase.Query("SELECT url_id, freq from bigrams WHERE (term_id1, term_id2) = (?, ?)", term_id, word_id2)
 			if err != nil {
 				return list, false
@@ -116,17 +111,8 @@ func dlookup(word string, idx *IIndex, wcSearch bool) (list TfList, found bool) 
 
 func (idx *IIndex) imgSearch(word string) (list TfList, found bool) {
 	var rows *sql.Rows
-	var term_id int // yes
-	var url_id int // yes
-	var img_id int // yes
-	var src string // yes, not used, returning
-	var altTxt string // yes, not used, returning
-	var url string // yes, not used, returning
-	var freq int // yes, not used
-	var wordCount int // yes, not used
-	var title string // yes, not used, returning
-	var totdocCount int // yes, not used
-	var hitdocCount int // yes, not used
+	var term_id, url_id, img_id, freq, wordCount, totdocCount, hitdocCount int
+	var src, altTxt, url, title string
 
 	words := stringMod(word)
 	word = words[0]
@@ -149,18 +135,13 @@ func (idx *IIndex) imgSearch(word string) (list TfList, found bool) {
 	rows, err = idx.dbase.Query("SELECT url_id, img_id, freq from alt_hits WHERE term_id = ?", term_id)
 
 	for rows.Next() {
-		// with url_id, need wordCount, title
 		err = rows.Scan(&url_id, &img_id, &freq)
-		// log.Printf("url_id: %v, img_id: %v, freq: %v\n", url_id, img_id, freq)
 		err = idx.dbase.QueryRow("SELECT url, title, altw_count from urls WHERE id = ?", url_id).Scan(&url, &title, &wordCount)
-		//log.Printf("title: %v, wordCount: %v\n", title, wordCount)
 		err = idx.dbase.QueryRow("SELECT src, alt_txt from imgs WHERE id = ?", img_id).Scan(&src, &altTxt)
-		//log.Printf("src: %v, altTxt: %v\n", src, altTxt)
 		tf := float64(freq) / float64(wordCount)
 		df := float64(hitdocCount) / float64(totdocCount)
 		idf := float64(1 / df)
 		tfidf := tf * idf
-		//log.Println(tfidf)
 		nurl := TfIdf{url, title, altTxt, src, tfidf}
 		list = append(list, nurl)
 	}
@@ -169,31 +150,15 @@ func (idx *IIndex) imgSearch(word string) (list TfList, found bool) {
 	
 }
 
-func dsearch(idx *IIndex) func(w http.ResponseWriter, r *http.Request) {
-	searchserv := func(w http.ResponseWriter, r *http.Request) {
-		wcSearch := false
-		if wc := r.URL.Query().Get("wildcard"); wc != "" {
-			wcSearch = true
-		}
-		if img := r.URL.Query().Get("image"); img != "" {
-			log.Println("image search")
-		}
-		r.ParseForm()
-		searchw := r.Form["term"][0]                   // retrieve search term
-		if img := r.URL.Query().Get("image"); img != "" {
-			idx.imgSearch(searchw)
-		} else {
-			if keys, found := dlookup(searchw, idx, wcSearch); found { // lookup term; was found keys = map[string]int
-				for _, value := range keys { // range through word's url:freq map
-					stri := fmt.Sprintf("%s: %g\n", value.Url, value.Tfidf) // string format
-					io.WriteString(w, stri)                                 // write to browser
-				}
-			} else { // was not found
-				io.WriteString(w, "Not found")
-			}
-		}
+func renderTemplate(path string, list TfList, w http.ResponseWriter) {
+	t, err := template.ParseFiles(path)
+	if err != nil {
+		log.Fatalf("Could not parse %v template: %v\n", path, err)
 	}
-	return searchserv
+	err = t.Execute(w, list)
+	if err != nil {
+		log.Fatalf("Could not execute list: %v\n", err)
+	}
 }
 
 func (idx *IIndex) search(w http.ResponseWriter, r *http.Request) {
@@ -209,75 +174,29 @@ func (idx *IIndex) search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch imgSearch {
+		// word searching
 		case false:
 			list, found := dlookup(searchWord, idx, wcSearch)
 			if found {
-				// render url template
-				t, err := template.ParseFiles("static/urls.html")
-				if err != nil {
-					log.Fatalf("Could not parse search.html tempate: %v\n", err)
-				}
-				err = t.Execute(w, list)
-				if err != nil {
-					log.Fatalf("Could not execute list: %v\n", err)
-				}
+				renderTemplate("static/urls.html", list, w)
 			} else {
-				// render not found template
-				t, err := template.ParseFiles("static/notFound.html")
-				if err != nil {
-					log.Fatalf("Could not parse notFound template: %v\n", err)
-				}
-				err = t.Execute(w, list)
-				if err != nil {
-					log.Fatalf("Could not execute notFound list: %v\n", err)
-				}
+				renderTemplate("static/notFound.html", list, w)
 			}
+		// image searching
 		case true:
 			list, found := idx.imgSearch(searchWord)
 			if found {
-				t, err := template.ParseFiles("static/images.html")
-				if err != nil {
-					log.Fatalf("Could not parse images.html template: %v\n", err)
-				}
-				err = t.Execute(w, list)
-				if err != nil {
-					log.Fatalf("Could not execute image list: %v\n", err)
-				}
+				renderTemplate("static/images.html", list, w)
 			} else {
-				t, err := template.ParseFiles("static/notFound.html")
-				if err != nil {
-					log.Fatalf("Could not parse notFound template: %v\n", err)
-				}
-				err = t.Execute(w, list)
-				if err != nil {
-					log.Fatalf("Could not execute notFound list: %v\n", err)
+				renderTemplate("static/notFound.html", list, w)
 			}
-		}
 	}
-
-	
-
-	/*t, err := template.ParseFiles("static/search.html")
-	if err != nil {
-		log.Fatalf("FarseFiles: ", err)
-	}
-
-	books := []Book {
-		{"The Iliad", "Homer"},
-		{"Dracula", "Bram Stoker"},
-	}
-
-	err = t.Execute(w, books)
-	if err != nil {
-		log.Fatalf("Temp Execute: ", err)
-	}*/
 }
 
 func dservers(idx *IIndex) {
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.Handle("/styles", http.FileServer(http.Dir("./styles")))
 	http.HandleFunc("/search", idx.search)
-	//http.HandleFunc("/search", dsearch(idx))
 
 	go http.ListenAndServe(":8080", nil)
 }
