@@ -11,11 +11,11 @@ ol {
 	counter-reset: liCount;
 	display: grid;
 	grid-gap: calc(var(--border-size) * 4);
-	font-family: system-ui, sans-serif; /*CHANGE LATER*/
+	font-family: cursive; /*CHANGE LATER*/
 }
 
 	/* selects all <li> elements where the parents is a <ol> element */
-ol>li {
+li {
 	margin: var(--border-size);
 	background-color: var(--card-color);
 	color: var(--text-color);
@@ -36,9 +36,8 @@ ol>li {
 	border-radius: 100vmax;
 }
 
-ol>li::before {
+li::before {
 	content: counter(liCount);
-	/*margin-left: 0px;*/
 	width: 25px;
 	height: 25px;
 	margin-right: auto;
@@ -51,7 +50,7 @@ ol>li::before {
 	border-radius: inherit;
 }
 
-ol>li::after {
+li::after {
 	 content: "";
 	 position: absolute;
 	 height: 100%;
@@ -62,22 +61,27 @@ ol>li::after {
 	 border-radius: inherit;
 }
 
-ol>li:nth-child(even) {
+li:nth-child(even) {
 	grid-template-columns: 1fr auto auto auto;
 }
 
-ol>li:nth-child(even)::before {
+li:nth-child(even)::before {
 	grid-column: 4;
 }
 
-ol>li:nth-child(even)::after {
+li:nth-child(even)::after {
 	right: 0;
 }
 
+p {
+	font-family: cursive;
+	align-items: center;
+	justify-items: center;
+}
 
 body {
 	background-color: rgba(255, 235, 162, 1);
-	margin-left: 30%;
-	margin-right: 30%;
-	margin-top: 5%;
+	margin-left: 20%;
+	margin-right: 20%;
+	margin-top: 10%;
 }

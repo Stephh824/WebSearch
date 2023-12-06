@@ -5,7 +5,12 @@
 	<body>
 		<ol>
 			{{range .}}
-				<li>{{.Title}}: {{.Tfidf}}</li>
+			<li>
+				<p>
+					<a href="{{.Url}}">{{.Title}}:</a>
+					{{.Tfidf}}
+				</p>
+			</li>
 			{{end}}
 		</ol>
 	</body>
