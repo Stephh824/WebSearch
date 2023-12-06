@@ -4,11 +4,12 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"os"
+	"os/signal"
+	"syscall"
 	"database/sql"
 	"text/template"
 )
-
-func wordQuery(wcSearch bool) (word_id2, wordIds) 
 
 func dlookup(word string, idx *IIndex, wcSearch bool) (list TfList, found bool) {
 	var word_id int
@@ -194,9 +195,17 @@ func (idx *IIndex) search(w http.ResponseWriter, r *http.Request) {
 }
 
 func dservers(idx *IIndex) {
+	idx.Open()
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+	
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.Handle("/styles", http.FileServer(http.Dir("./styles")))
 	http.HandleFunc("/search", idx.search)
 
 	go http.ListenAndServe(":8080", nil)
+
+	<-exit
+	idx.Close()
+	log.Println("clean shutdown")
 }

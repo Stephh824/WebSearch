@@ -3,8 +3,6 @@ package main
 import (
 	"sync"
 	"database/sql"
-	//"fmt"
-	"time"
 )
 
 var stopwords map[string]struct{}
@@ -26,11 +24,6 @@ func indexInIt() IIndex {
 
 func main() {
 	idx := indexInIt()
-	idx.Open() // remove after
 	dservers(&idx)
-	//dcrawl("https://openai.com/robots.txt", &idx)
-	
-	for {
-		time.Sleep(100 * time.Millisecond)
-	}
+	//dcrawl("https://openai.com", &idx)
 }
