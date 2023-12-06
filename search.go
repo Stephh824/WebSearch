@@ -80,6 +80,7 @@ func dlookup(word string, idx *IIndex, wcSearch bool) (list TfList, found bool) 
 			if err != nil {
 				return list, false
 			}
+			log.Printf("Term_id1: %v term_id2: %v\n", term_id, word_id2)
 			rows, err = idx.dbase.Query("SELECT url_id, freq from bigrams WHERE (term_id1, term_id2) = (?, ?)", term_id, word_id2)
 			if err != nil {
 				return list, false
@@ -105,7 +106,7 @@ func dlookup(word string, idx *IIndex, wcSearch bool) (list TfList, found bool) 
 			df := float64(hitdocCount) / float64(totdocCount)
 			idf := float64(1 / df)
 			tfidf := tf * idf
-			nurl := TfIdf{url: url, title: title, tfidf: tfidf}
+			nurl := TfIdf{Url: url, Title: title, Tfidf: tfidf}
 			list = append(list, nurl)
 		}
 	}
@@ -184,7 +185,7 @@ func dsearch(idx *IIndex) func(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if keys, found := dlookup(searchw, idx, wcSearch); found { // lookup term; was found keys = map[string]int
 				for _, value := range keys { // range through word's url:freq map
-					stri := fmt.Sprintf("%s: %g\n", value.url, value.tfidf) // string format
+					stri := fmt.Sprintf("%s: %g\n", value.Url, value.Tfidf) // string format
 					io.WriteString(w, stri)                                 // write to browser
 				}
 			} else { // was not found
@@ -198,15 +199,65 @@ func dsearch(idx *IIndex) func(w http.ResponseWriter, r *http.Request) {
 func (idx *IIndex) search(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	wcSearch := false
+	imgSearch := false
 	searchWord := r.Form["term"][0]
 	if wc := r.URL.Query().Get("wildcard"); wc != "" {
 		wcSearch = true
 	}
-	log.Printf("wildcard: %v word: %v\n", wcSearch, searchWord)
+	if img := r.URL.Query().Get("image"); img != "" {
+		imgSearch = true
+	}
+
+	switch imgSearch {
+		case false:
+			list, found := dlookup(searchWord, idx, wcSearch)
+			if found {
+				// render url template
+				t, err := template.ParseFiles("static/urls.html")
+				if err != nil {
+					log.Fatalf("Could not parse search.html tempate: %v\n", err)
+				}
+				err = t.Execute(w, list)
+				if err != nil {
+					log.Fatalf("Could not execute list: %v\n", err)
+				}
+			} else {
+				// render not found template
+				t, err := template.ParseFiles("static/notFound.html")
+				if err != nil {
+					log.Fatalf("Could not parse notFound template: %v\n", err)
+				}
+				err = t.Execute(w, list)
+				if err != nil {
+					log.Fatalf("Could not execute notFound list: %v\n", err)
+				}
+			}
+		case true:
+			list, found := idx.imgSearch(searchWord)
+			if found {
+				t, err := template.ParseFiles("static/images.html")
+				if err != nil {
+					log.Fatalf("Could not parse images.html template: %v\n", err)
+				}
+				err = t.Execute(w, list)
+				if err != nil {
+					log.Fatalf("Could not execute image list: %v\n", err)
+				}
+			} else {
+				t, err := template.ParseFiles("static/notFound.html")
+				if err != nil {
+					log.Fatalf("Could not parse notFound template: %v\n", err)
+				}
+				err = t.Execute(w, list)
+				if err != nil {
+					log.Fatalf("Could not execute notFound list: %v\n", err)
+			}
+		}
+	}
 
 	
 
-	t, err := template.ParseFiles("static/search.html")
+	/*t, err := template.ParseFiles("static/search.html")
 	if err != nil {
 		log.Fatalf("FarseFiles: ", err)
 	}
@@ -219,11 +270,12 @@ func (idx *IIndex) search(w http.ResponseWriter, r *http.Request) {
 	err = t.Execute(w, books)
 	if err != nil {
 		log.Fatalf("Temp Execute: ", err)
-	}
+	}*/
 }
 
 func dservers(idx *IIndex) {
 	http.Handle("/", http.FileServer(http.Dir("./static")))
+	http.Handle("/styles", http.FileServer(http.Dir("./styles")))
 	http.HandleFunc("/search", idx.search)
 	//http.HandleFunc("/search", dsearch(idx))
 

@@ -1,0 +1,16 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="/stylesheets/images.css">
+	</head>
+	<body>
+		{{range .}}
+			<div class="container">
+				<img src="{{.Src}}" alt="{{.AltTxt}}" class="image">
+					<div class="middle">
+						<div class="text">{{.AltTxt}}</div>
+					</div>
+			</div>
+			<br>
+		{{end}}
+	</body>
+</html>

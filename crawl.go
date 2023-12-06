@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 	"log"
+	"net/url"
 )
 
 type DownloadResult struct {
@@ -21,8 +22,13 @@ type ExtractResult struct {
 func (idx *IIndex) addImgs(url_id int, ex *ExtractResult) {
 	var wcount int
 	for img, alt := range ex.imgs {
-		//log.Println("image is: " + img + " alt text is: " + alt)
-		_, err := idx.dbase.Exec(`INSERT OR IGNORE INTO imgs(src, alt_txt) VALUES(?, ?);`, img, alt)
+		url, err := url.Parse(img)
+		if err != nil {
+			log.Fatalf("Could not parse %v: %v\n", img, err)
+		}
+		url.RawQuery = ""
+		img = url.String()
+		_, err = idx.dbase.Exec(`INSERT OR IGNORE INTO imgs(src, alt_txt) VALUES(?, ?);`, img, alt)
 		if err != nil {
 			log.Fatalf("Could not insert %v, %v into imgs table: %v\n", img, alt, err)
 		}

@@ -37,22 +37,8 @@ func main() {
 	} else {
 		fmt.Println("Not found")
 	}*/
-
-	/*if list, found := dlookup("computer science", &idx, false); found {
-		for _, val := range list {
-			fmt.Printf("title: %v, tfidf: %v\n", val.title, val.tfidf)
-		}
-	} else {
-		fmt.Println("Not found")
-	}*/
 	
 	for {
 		time.Sleep(100 * time.Millisecond)
 	}
-
-	/*idx.Open()
-	urls, _ := dlookup("rob", &idx, true)
-	for _, url := range urls {
-		fmt.Printf("{\"%v\", %v},\n", url.url, url.tfidf)
-	}*/
 }

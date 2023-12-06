@@ -1,11 +1,11 @@
 package main
 
 type TfIdf struct {
-	url   string
-	title string
-	altTxt string
-	src string
-	tfidf float64
+	Url   string
+	Title string
+	AltTxt string
+	Src string
+	Tfidf float64
 }
 
 type TfList []TfIdf
@@ -15,12 +15,12 @@ func (list TfList) Len() int {
 }
 
 func (list TfList) Less(i, j int) bool {
-	if list[i].tfidf == list[j].tfidf {
-		return list[i].url > list[j].url
+	if list[i].Tfidf == list[j].Tfidf {
+		return list[i].Url > list[j].Url
 	}
-	return list[i].tfidf > list[j].tfidf
+	return list[i].Tfidf > list[j].Tfidf
 }
 
 func (list TfList) Swap(i, j int) {
-	list[i].url, list[i].tfidf, list[j].url, list[j].tfidf = list[j].url, list[j].tfidf, list[i].url, list[i].tfidf
+	list[i].Url, list[i].Tfidf, list[j].Url, list[j].Tfidf = list[j].Url, list[j].Tfidf, list[i].Url, list[i].Tfidf
 }
