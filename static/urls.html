@@ -1,7 +1,12 @@
 <html>
+	<head>
+		<link rel="stylesheet" href="/stylesheets/urls.css">
+	</head>
 	<body>
-		{{range .}}
-			<p>{{.Title}}: {{.Tfidf}}</p>
-		{{end}}
+		<ol>
+			{{range .}}
+				<li>{{.Title}}: {{.Tfidf}}</li>
+			{{end}}
+		</ol>
 	</body>
 </html>

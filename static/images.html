@@ -4,13 +4,14 @@
 	</head>
 	<body>
 		{{range .}}
+		<a href="{{.Url}}">
 			<div class="container">
 				<img src="{{.Src}}" alt="{{.AltTxt}}" class="image">
 					<div class="middle">
 						<div class="text">{{.AltTxt}}</div>
 					</div>
 			</div>
-			<br>
+		</a>
 		{{end}}
 	</body>
 </html>

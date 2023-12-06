@@ -1,6 +1,9 @@
 .container {
 	position: relative;
 	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px;
 }
 
 .image {
@@ -10,6 +13,9 @@
 	height: auto;
 	transition: .5s ease;
 	backface-visibility: hidden;
+	align-content: center;
+	border-radius: 8px;
+	border: 10px solid rgba(255, 242, 126, 1);
 }
 
 .middle {
@@ -24,6 +30,7 @@
 
 .container:hover .image {
 	opacity: 0.3;
+	/*box-shadow: 0 0 5px 5px rgba(255, 229, 0, 1);*/
 }
 
 .container:hover .middle {
@@ -31,8 +38,14 @@
 }
 
 .text {
-	background-color: black;
-	color: white;
+	background-color: rgba(255, 242, 126, 1);
+	color: black;
 	font-size: 16px;
 	padding: 16px 32px;
+	border-radius: 8px;
+}
+
+body {
+	background-color: rgba(218, 165, 32, 1);
+	margin-top: 10%;
 }
