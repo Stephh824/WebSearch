@@ -45,6 +45,11 @@
 	font-family: cursive;
 }
 
+h1 {
+	font-family: cursive;
+	margin-left: 25%;	
+}
+
 body {
 	background-color: rgba(218, 165, 32, 1);
 	margin-top: 10%;
